@@ -10,6 +10,7 @@ labels = glob.glob('data/cvpr2016_cub/text_c10/*/')
 sentences  = []
 vocabulary = []
 voc_lookup = dict()
+
 def tokenize(sentence):
     sentence = ''.join([ c if c.isalpha() else ' ' for c in sentence ])
     words    = sentence.split(' ')
@@ -23,6 +24,11 @@ def word2idx(word):
 
     voc_lookup[word] = len(vocabulary)
     vocabulary.append(word)
+
+    return voc_lookup[word]
+
+sos = word2idx("<SOS>")
+eos = word2idx("<EOS>")
 
 for label in labels:
     # Retrieve a list of text files with sentences for that species.
@@ -40,7 +46,7 @@ for label in labels:
                     for word in tokenize(sentence.rstrip())
                 ]
 
-                words = [ word2idx(word) for word in words ]
+                words = [ sos ] + [ word2idx(word) for word in words ] + [ eos ]
 
                 sentences.append([ species, text, words ])
 
