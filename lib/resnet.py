@@ -3,7 +3,7 @@ from inception_resnet_v2 import *
 import numpy as np
 
 class Resnet:
-    def __init__(self, session):
+    def __init__(self, session, ckpt_name):
         scope = inception_resnet_v2_arg_scope()
 
 
@@ -24,7 +24,7 @@ class Resnet:
             inception_resnet_v2(scaled_input_tensor, is_training = False)
 
         saver = tf.train.Saver()
-        saver.restore(session, 'data/inception_resnet_v2_2016_08_30.ckpt')
+        saver.restore(session, ckpt_name)
 
         self.session = session
 
