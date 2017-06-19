@@ -8,6 +8,8 @@ pp = pprint.PrettyPrinter()
 # Retrieve a list of species.
 labels = glob.glob('data/cvpr2016_cub/text_c10/*/')
 
+max_length = 10
+
 sentences  = []
 vocabulary = []
 instances  = []
@@ -45,14 +47,18 @@ eos = word2idx("<EOS>")
 def compute_in_out(words):
     pairs = []
 
-    words = words[0 : 9]
+    words = words[0 : max_length]
+
+    if len(words) == max_length:
+        words[-1] = eos
 
     for i in range(len(words) - 1):
         x = words[0 : i + 1]
-        x = np.pad(x, (0, 10 - len(x)), 'constant', constant_values = eos)
+        x = np.pad(x, (0, max_length - len(x)), 'constant',
+                   constant_values = eos)
         y = words[i + 1]
 
-        pairs.append((x, y))
+        pairs.append((x, y, i + 1))
 
     return pairs
 
@@ -76,7 +82,7 @@ for label in labels:
                 words = [ sos ] + [ word2idx(word) for word in words ] + [ eos ]
 
                 for pair in compute_in_out(words):
-                    sentences.append([ species, text_idx, pair[0], pair[1] ])
+                    sentences.append([ species, text_idx, pair[0], pair[1], pair[2] ])
 
 with open('data/produced_idx2word.csv', 'w') as file:
     writer = csv.writer(file)
@@ -99,6 +105,6 @@ with open('data/produced_sentences.csv', 'w') as file:
 
     writer.writerow([ 'class', 'instance', 'sentence' ])
 
-    for species, text, pair_in, pair_out in sentences:
+    for species, text, pair_in, pair_out, pair_len in sentences:
         writer.writerow([ species, text,
-                          '|'.join([ str(idx) for idx in pair_in]), pair_out ])
+                          '|'.join([ str(idx) for idx in pair_in]), pair_out, pair_len ])
