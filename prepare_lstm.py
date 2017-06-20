@@ -8,7 +8,7 @@ pp = pprint.PrettyPrinter()
 # Retrieve a list of species.
 labels = glob.glob('data/cvpr2016_cub/text_c10/*/')
 
-max_length = 10
+max_length = 6
 
 sentences  = []
 vocabulary = []

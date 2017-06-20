@@ -1,8 +1,11 @@
+from lib.lstmcell import MultiLSTMCell
+from lib.static_rnn import static_rnn
+# from tensorflow.contrib.rnn import static_rnn
 import tensorflow as tf
 import numpy as np
 from idx2word import idx2sentence, embedding_size
 
-max_length = 10
+max_length = 6
 
 filename_queue = tf.train.string_input_producer(["data/produced_sentences.csv"])
 
@@ -23,7 +26,10 @@ def get_batch(batch_size):
 
     length = tf.string_to_number(length, out_type = tf.int32, name = "sentence_length")
 
-    return sentences.eval(), words.eval(), length.eval()
+    label    = tf.string_to_number(label, out_type = tf.int32, name = "label")
+    features = tf.one_hot(label, 100, name = "features")
+
+    return sentences.eval(), words.eval(), length.eval(), features.eval()
 
 # with tf.Session() as sess:
 #     sess.run(tf.global_variables_initializer())
@@ -41,11 +47,12 @@ epochs     = int(942878 / batch_size)
 # Network Parameters
 n_input = embedding_size  # MNIST data input (img shape: 28*28)
 n_steps = max_length # timesteps
-n_hidden = 128 # hidden layer num of features
+n_hidden = 512 # hidden layer num of features
 n_classes = embedding_size # MNIST total classes (0-9 digits)
 
 # Placeholder for the inputs in a given iteration
 x = tf.placeholder("float", [None, n_steps, n_input], name = "x")
+f = tf.placeholder("float", [None, 100], name = "f")
 seqlen = tf.placeholder(tf.int32, [None], name = "seqlen")
 y = tf.placeholder("float", [None, n_classes], name = "y")
 
@@ -56,25 +63,25 @@ biases = {
     'out': tf.Variable(tf.random_normal([n_classes]))
 }
 
-lstm = tf.contrib.rnn.MultiRNNCell([
+lstm = MultiLSTMCell([
     tf.contrib.rnn.BasicLSTMCell(n_hidden, forget_bias = 1.0)
     for _ in range(2)
 ])
 
-# x2 = tf.unstack(x, n_steps, 1)
+x2 = tf.unstack(x, n_steps, 1)
+
 # Initial state of the LSTM memory.
 init_state = lstm.zero_state(batch_size, tf.float32)
-outputs, final_state = tf.nn.dynamic_rnn(lstm, x,
-                                         dtype = tf.float32)
+outputs, final_state = static_rnn(lstm, x2, f, dtype = tf.float32)
                                         #  sequence_length = seqlen)
 
 # CHANGE INTO DYNAMIC
 # initial_state = state = lstm.zero_state(tf.random_normal([batch_size]))
 # outputs, final_state = tf.nn.dynamic_rnn(cell, x2, initial_state=init_state)
 
-pred = tf.matmul(outputs[:, -1, :], weights['out']) + biases['out']
+pred = tf.matmul(outputs[-1], weights['out']) + biases['out']
 
-print(outputs.shape)
+# print(outputs.shape)
 
 pred_softmax = tf.nn.softmax(pred)
 
@@ -103,11 +110,14 @@ with tf.Session() as sess:
     threads = tf.train.start_queue_runners(coord = coord)
 
     for step in range(1, epochs):
-        batch_x, batch_y, batch_len = get_batch(batch_size = batch_size)
+        batch_x, batch_y, batch_len, batch_f = get_batch(batch_size = batch_size)
+
+        # print(batch_f)
 
         # Run optimization op (backprop)
         sess.run(optimizer, feed_dict={
             x: batch_x,
+            f: batch_f,
             y: batch_y,
             seqlen: batch_len
         })
@@ -115,6 +125,7 @@ with tf.Session() as sess:
         # Calculate batch accuracy and loss
         acc, loss = sess.run([ accuracy, cost ], feed_dict={
             x: batch_x,
+            f: batch_f,
             y: batch_y,
             seqlen: batch_len
         })
@@ -133,12 +144,13 @@ with tf.Session() as sess:
                 while len(input) < n_steps:
                     input = input + [ eos ]
 
-                print(len(sentence))
+                features = [ 0 ] * 5 + [ 1 ] + [ 0 ] * 94
 
                 input = np.array([input for i in range(batch_size)])
 
                 output = sess.run(pred_softmax, feed_dict = {
                     x: input,
+                    f: [ features for i in range(batch_size) ],
                     seqlen: [ len(sentence) for i in range(batch_size) ]
                 })[0]
 
