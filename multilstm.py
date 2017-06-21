@@ -1,5 +1,5 @@
 from lib.lstmcell import MultiLSTMCell
-from lib.static_rnn import static_rnn
+from lib.rnn import dynamic_rnn, static_rnn
 import tensorflow as tf
 from tensorflow.examples.tutorials.mnist import input_data
 
@@ -21,7 +21,7 @@ n_hidden = 200 # hidden layer num of features
 n_classes = 10 # MNIST total classes (0-9 digits)
 
 # Placeholder for the inputs in a given iteration
-x = tf.placeholder("float", [None, n_steps, n_input])
+x = tf.placeholder("float", [None, None, n_input])
 y = tf.placeholder("float", [None, n_classes])
 
 weights = {
@@ -34,13 +34,14 @@ biases = {
 lstm = MultiLSTMCell([tf.contrib.rnn.LSTMCell(n_hidden, forget_bias=1.0) for _ in range(2)])
 
 	
-x2 = tf.unstack(x, n_steps, 1)
+# x2 = tf.unstack(x, n_steps, 1)
 
 # Initial state of the LSTM memory.
 init_state = lstm.zero_state(batch_size, tf.float32)
-outputs, final_state = static_rnn(lstm, x2, im_features, initial_state=init_state)
+# outputs, final_state = static_rnn(lstm, x2, im_features, initial_state=init_state)
+outputs, final_state = dynamic_rnn(lstm, x, im_features, initial_state=init_state)
 
-pred = tf.matmul(outputs[-1], weights['out']) + biases['out']
+pred = tf.matmul(outputs[:, -1], weights['out']) + biases['out']
 
 # Define loss and optimizer
 cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=pred, labels=y))
@@ -57,12 +58,15 @@ init = tf.global_variables_initializer()
 with tf.Session() as sess:
     sess.run(init)
     step = 1
+
     # Keep training until reach max iterations
     while step * batch_size < training_iters:
         batch_x, batch_y = mnist.train.next_batch(batch_size)
         # Reshape data to get 28 seq of 28 elements
         batch_x = batch_x.reshape((batch_size, n_steps, n_input))
         # Run optimization op (backprop)
+        # print sess.run(outputs, feed_dict={x:batch_x, y:batch_y})[:,-1].shape
+        # print outputs.eval().shape
         sess.run(optimizer, feed_dict={x: batch_x, y: batch_y})
         if step % display_step == 0:
             # Calculate batch accuracy
