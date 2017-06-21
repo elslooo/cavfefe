@@ -159,4 +159,4 @@ def retrain():
         print 'Final loss: %.3f' % final_loss
 
 
-retrain()
+#retrain()
