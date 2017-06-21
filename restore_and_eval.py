@@ -8,7 +8,7 @@ from tensorflow.contrib.framework.python.ops.variables import get_or_create_glob
 from tensorflow.contrib.framework import assign_from_checkpoint_fn
 from lib import inception_preprocessing
 from retrain import get_split, batch_loading
-from tensorflow.python.tools.inspect_checkpoint import _get_checkpoint_filename
+#from tensorflow.python.tools.inspect_checkpoint import _get_checkpoint_filename
 
 # load data pipeline
 
@@ -25,6 +25,15 @@ file_initials = 'cub200_2011_tfrc_%s_*.tfrecord'
 layer_to_grab = "InceptionResnetV2/Logits/AvgPool_1a_8x8/AvgPool:0"
 
 
+# parameter settings
+NUM_CLASSES = 200
+NUM_EPOCHS = 2
+NUM_READERS = 4
+NUM_THREADS = 4
+BATCH_SIZE = 1
+IMG_SIZE = 299
+
+
 def validate_resnet():
     # get the trained network
     scope = inception_resnet_v2_arg_scope()
@@ -37,23 +46,27 @@ def validate_resnet():
         #            " given directory %s" % log_dir)
         # this could also be the latest:
         checkpoint_file = tf.train.latest_checkpoint(log_dir)
-
+        print "Checkpoint file: ", checkpoint_file
         # get the data
         dataset = get_split(split_name, tfrc_dir, file_initials=file_initials)
-        images, labels = batch_loading(dataset, batch_size=BATCH_SIZE)
+        images, labels = batch_loading(dataset, batch_size=BATCH_SIZE, image_size = IMG_SIZE)
         epoch_size = dataset.num_samples / BATCH_SIZE
 
+        print "epoch_size: ", epoch_size
         # create graph
         with slim.arg_scope(scope):
             logits, end_points = inception_resnet_v2(images, num_classes=dataset.num_samples, is_training=False)
 
         # get the variables to restore
-        var_to_restore = slim.get_variables_to_restore()
-        saver = tf.train.Saver(var_to_restore)
+        #var_to_restore = slim.get_variables_to_restore()
+        #saver = tf.train.Saver(var_to_restore)
+
+        saver = tf.train.Saver()
 
         with tf.Session() as sess:
             # restore variables
             saver.restore(sess, checkpoint_file)
+            print "Restored Network"
 
         # grab the layer before the fully convolutional one
         # this are the weights/features
@@ -101,3 +114,5 @@ def validate_resnet():
                 eval_op=names_to_updates.values(),
                 summary_op=tf.summary.merge(summary_ops),
                 eval_interval_secs=eval_interval_secs)
+
+validate_resnet()
