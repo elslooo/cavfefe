@@ -2,6 +2,7 @@ import tensorflow as tf
 import numpy as np
 from idx2word import idx2sentence, embedding_size
 import lib.lm as lm
+import lib.etc as etc
 
 max_length = 10
 
@@ -24,7 +25,7 @@ init = tf.global_variables_initializer()
 with tf.Session() as sess:
     sess.run(init)
 
-    for step in range(1, epochs):
+    for step, pi in etc.range(epochs):
         # Get a batch of training instances.
         batch_x, batch_y, batch_len, batch_f = get_batch(batch_size)
 
@@ -34,13 +35,14 @@ with tf.Session() as sess:
         # Calculate batch accuracy and loss
         acc, loss = model.evaluate(batch_x, batch_f, batch_y, batch_len, sess)
 
-        print("Iter " + str(step) + " / " + str(epochs) + \
+        print("Iter " + str(1 + step) + " / " + str(epochs) + \
               ", Minibatch Loss= " + \
               "{:.6f}".format(loss) + ", Training Accuracy= " + \
-              "{:.5f}".format(acc))
+              "{:.5f}".format(acc) + ", Time Remaining= " + \
+              etc.format_seconds(pi.time_remaining()))
 
         # Generate a sample sentence after each 10 iterations.
-        if step % 10 == 0:
+        if (1 + step) % 10 == 0:
             features = [ 0 ] * 5 + [ 1 ] + [ 0 ] * 94
 
             sentence = model.generate(features, sess)

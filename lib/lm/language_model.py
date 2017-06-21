@@ -5,7 +5,7 @@ TODO: Philip, why does the output weights layer not include the feature
       Rewrite static_rnn into a dynamic_rnn, will speed up the training. ~ Tim
 """
 
-from core import MultiLSTMCell, static_rnn
+from core import MultiLSTMCell, dynamic_rnn
 
 import numpy as np
 import tensorflow as tf
@@ -63,13 +63,10 @@ class LanguageModel:
             for _ in range(2)
         ])
 
-        # Necessary for Tensorflow to work (only with static_rnn).
-        x = tf.unstack(self.x, self.max_length, 1)
+        outputs, final_state = dynamic_rnn(lstm, self.x, self.f,
+                                           dtype = tf.float32)
 
-        outputs, final_state = static_rnn(lstm, x, self.f, dtype = tf.float32)
-                                          # sequence_length = seqlen)
-
-        self.pred         = tf.matmul(outputs[-1], self.out_W) + self.out_b
+        self.pred         = tf.matmul(outputs[:, -1], self.out_W) + self.out_b
         self.pred_softmax = tf.nn.softmax(self.pred)
 
         # This is the relevance loss of the language model.

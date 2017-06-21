@@ -20,8 +20,6 @@ class SentenceReader(RandomReader):
     def read(self, lines = 10):
         results = RandomReader.read(self, lines = lines)
 
-        print(len(results))
-
         results = [ result.split(',') for result in results ]
 
         label, instance, sentences, words, length = \
