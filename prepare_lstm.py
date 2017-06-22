@@ -8,13 +8,14 @@ pp = pprint.PrettyPrinter()
 # Retrieve a list of species.
 labels = glob.glob('data/cvpr2016_cub/text_c10/*/')
 
-max_length = 10
+max_length = 15
 
-sentences  = []
-vocabulary = []
-instances  = []
-voc_lookup = dict()
-ins_lookup = dict()
+sentences    = []
+sc_sentences = []
+vocabulary   = []
+instances    = []
+voc_lookup   = dict()
+ins_lookup   = dict()
 
 def tokenize(sentence):
     sentence = ''.join([ c if c.isalpha() else ' ' for c in sentence ])
@@ -79,10 +80,13 @@ for label in labels:
                     for word in tokenize(sentence.rstrip())
                 ]
 
-                words = [ sos ] + [ word2idx(word) for word in words ] + [ eos ]
+                words  = [ sos ] + [ word2idx(word) for word in words ] + [ eos ]
+                subsets = compute_in_out(words)
 
-                for pair in compute_in_out(words):
+                for pair in subsets:
                     sentences.append([ species, text_idx, pair[0], pair[1], pair[2] ])
+
+                sc_sentences.append([ species, text_idx, pair[0], pair[2] ])
 
 with open('data/produced_idx2word.csv', 'w') as file:
     writer = csv.writer(file)
@@ -103,8 +107,17 @@ with open('data/produced_idx2instance.csv', 'w') as file:
 with open('data/produced_sentences.csv', 'w') as file:
     writer = csv.writer(file)
 
-    writer.writerow([ 'class', 'instance', 'sentence' ])
+    writer.writerow([ 'class', 'instance', 'sentence', 'next_word', 'length' ])
 
     for species, text, pair_in, pair_out, pair_len in sentences:
         writer.writerow([ species, text,
                           '|'.join([ str(idx) for idx in pair_in]), pair_out, pair_len ])
+
+with open('data/produced_sentences_classifier.csv', 'w') as file:
+    writer = csv.writer(file)
+
+    writer.writerow([ 'class', 'instance', 'sentence', 'length' ])
+
+    for species, text, pair_in, pair_len in sc_sentences:
+        writer.writerow([ species, text,
+                          '|'.join([ str(idx) for idx in pair_in]), pair_len ])
