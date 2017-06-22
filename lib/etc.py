@@ -16,7 +16,7 @@ class ProgressInfo:
         return 0
 
 
-def range(n, info_frequency=0):
+def range(n, info_frequency=-1):
     i = 0
     start = time.time()
     if_counter = start

@@ -1,27 +1,27 @@
+from __future__ import print_function
 import tensorflow as tf
 import numpy as np
 from idx2word import idx2sentence, embedding_size
-import lib.lm as lm
-from lib.lm.sentenceclass import SentenceClassifier
-from lib.lm.class_reader import SentenceClassReader
+from lib.sc import SentenceClassifier, SentenceReader
 import lib.etc as etc
+import sys
 
-max_length = 15
-nr_classes = 200
+max_length  = 15
+num_classes = 200
 
-reader = SentenceClassReader("data/produced_sentences_classifier.csv",
-                        nr_classes, embedding_size = embedding_size)
+reader = SentenceReader("data/produced_sentences_classifier.csv",
+                        num_classes, embedding_size = embedding_size)
 
 def get_batch(batch_size):
     return reader.read(lines = batch_size)
 
 batch_size = 128
-epochs     = int(942878 / batch_size)
+epochs     = 2000
 
 # Network Parameters
 num_hidden = 512 # hidden layer num of features
 
-model = SentenceClassifier(max_length, embedding_size, num_hidden, nr_classes)
+model = SentenceClassifier(max_length, embedding_size, num_hidden, num_classes)
 
 init = tf.global_variables_initializer()
 
@@ -42,14 +42,9 @@ with tf.Session() as sess:
               ", Minibatch Loss= " + \
               "{:.6f}".format(loss) + ", Training Accuracy= " + \
               "{:.5f}".format(acc) + ", Time Remaining= " + \
-              etc.format_seconds(pi.time_remaining()))
+              etc.format_seconds(pi.time_remaining()), file = sys.stderr)
 
-        # Generate a sample sentence after each 10 iterations.
-        # if (1 + step) % 10 == 0:
-        #     features = [ 0 ] * 5 + [ 1 ] + [ 0 ] * 94
+        if (1 + step) % 10 == 0:
+            model.save(sess, 1 + step)
 
-            # sentence = model.generate(sess)
-
-            # print(idx2sentence([ np.argmax(word) for word in sentence ]))
-
-    print("Optimization Finished!")
+    print("Optimization Finished!", file = sys.stderr)

@@ -1,10 +1,11 @@
-from core import MultiLSTMCell, dynamic_rnn
+from lib.lm.core import MultiLSTMCell, dynamic_rnn
+from lib.model import Model
 
 import numpy as np
 import os
 import tensorflow as tf
 
-class LanguageModel(object):
+class LanguageModel(Model):
     def __init__(self, max_length, embedding_size, num_hidden,
                  learning_rate = 0.01):
         self.max_length     = max_length
@@ -16,12 +17,7 @@ class LanguageModel(object):
         self._create_weights()
         self._build_model()
 
-        self.saver = tf.train.Saver()
-
-        try:
-            os.makedirs("checkpoints")
-        except:
-            pass
+        Model.__init__(self)
 
     def _create_placeholders(self):
         # X is a batch of sentences. The sentences should be padded to n_steps.
@@ -131,6 +127,3 @@ class LanguageModel(object):
             sentence.append(output)
 
         return sentence
-
-    def save(self, session, epoch):
-        self.saver.save(session, 'checkpoints/language_model', global_step = epoch)

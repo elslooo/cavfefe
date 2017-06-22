@@ -1,9 +1,10 @@
 from ..random_reader import RandomReader
 
 class SentenceReader(RandomReader):
-    def __init__(self, path, embedding_size = 10):
+    def __init__(self, path, num_classes, embedding_size = 10):
         RandomReader.__init__(self, path)
 
+        self.num_classes    = num_classes
         self.embedding_size = embedding_size
 
     def one_hot(self, indices, num_classes):
@@ -22,7 +23,7 @@ class SentenceReader(RandomReader):
 
         results = [ result.split(',') for result in results ]
 
-        label, instance, sentences, words, length = \
+        labels, instance, sentences, length = \
         list(map(list, zip(*results)))
 
         sentences = [ sentence.split("|") for sentence in sentences ]
@@ -31,12 +32,9 @@ class SentenceReader(RandomReader):
         sentences = [ self.one_hot(sentence, self.embedding_size)
                       for sentence in sentences ]
 
-        words = [ int(word) for word in words ]
-        words = self.one_hot(words, self.embedding_size)
-
         length = self.string_to_number(length)
 
-        label    = self.string_to_number(label)
-        features = self.one_hot(label, 100)
+        labels = self.string_to_number(labels)
+        labels = self.one_hot(labels, self.num_classes)
 
-        return (sentences, words, length, features)
+        return (sentences, labels, length)
