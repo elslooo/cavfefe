@@ -1,10 +1,12 @@
+from __future__ import print_function
 import tensorflow as tf
 import numpy as np
 from idx2word import idx2sentence, embedding_size
 import lib.lm as lm
 import lib.etc as etc
+import sys
 
-max_length = 10
+max_length = 15
 
 reader = lm.SentenceReader("data/produced_sentences.csv",
                            embedding_size = embedding_size)
@@ -14,6 +16,7 @@ def get_batch(batch_size):
 
 batch_size = 128
 epochs     = int(942878 / batch_size)
+epochs     = 100
 
 # Network Parameters
 num_hidden = 512 # hidden layer num of features
@@ -39,7 +42,7 @@ with tf.Session() as sess:
               ", Minibatch Loss= " + \
               "{:.6f}".format(loss) + ", Training Accuracy= " + \
               "{:.5f}".format(acc) + ", Time Remaining= " + \
-              etc.format_seconds(pi.time_remaining()))
+              etc.format_seconds(pi.time_remaining()), file = sys.stderr)
 
         # Generate a sample sentence after each 10 iterations.
         if (1 + step) % 10 == 0:
@@ -47,6 +50,9 @@ with tf.Session() as sess:
 
             sentence = model.generate(features, sess)
 
-            print(idx2sentence([ np.argmax(word) for word in sentence ]))
+            print(idx2sentence([ np.argmax(word) for word in sentence ]),
+                  file = sys.stderr)
 
-    print("Optimization Finished!")
+            model.save(sess, step)
+
+    print("Optimization Finished!", file = sys.stderr)

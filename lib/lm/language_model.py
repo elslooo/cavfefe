@@ -8,6 +8,7 @@ TODO: Philip, why does the output weights layer not include the feature
 from core import MultiLSTMCell, dynamic_rnn
 
 import numpy as np
+import os
 import tensorflow as tf
 
 class LanguageModel:
@@ -21,6 +22,13 @@ class LanguageModel:
         self._create_placeholders()
         self._create_weights()
         self._build_model()
+
+        self.saver = tf.train.Saver()
+
+        try:
+            os.makedirs("checkpoints")
+        except:
+            pass
 
     def _create_placeholders(self):
         # X is a batch of sentences. The sentences should be padded to n_steps.
@@ -130,3 +138,6 @@ class LanguageModel:
             sentence.append(output)
 
         return sentence
+
+    def save(self, session, epoch):
+        self.saver.save(session, 'checkpoints/language_model', global_step = epoch)
