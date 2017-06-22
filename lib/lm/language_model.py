@@ -1,17 +1,10 @@
-"""
-TODO: Philip, why does the output weights layer not include the feature
-      embedding size? ~ Tim
-      What is the shape of the latent variable? ~ Tim
-      Rewrite static_rnn into a dynamic_rnn, will speed up the training. ~ Tim
-"""
-
 from core import MultiLSTMCell, dynamic_rnn
 
 import numpy as np
 import os
 import tensorflow as tf
 
-class LanguageModel:
+class LanguageModel(object):
     def __init__(self, max_length, embedding_size, num_hidden,
                  learning_rate = 0.01):
         self.max_length     = max_length

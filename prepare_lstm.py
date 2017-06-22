@@ -2,6 +2,7 @@ import csv
 import glob
 import pprint
 import numpy as np
+from random import shuffle
 
 pp = pprint.PrettyPrinter()
 
@@ -118,6 +119,7 @@ with open('data/produced_sentences_classifier.csv', 'w') as file:
 
     writer.writerow([ 'class', 'instance', 'sentence', 'length' ])
 
+    shuffle(sc_sentences)
     for species, text, pair_in, pair_len in sc_sentences:
         writer.writerow([ species, text,
                           '|'.join([ str(idx) for idx in pair_in]), pair_len ])
