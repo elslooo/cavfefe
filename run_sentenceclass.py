@@ -6,7 +6,7 @@ from lib.sc import SentenceClassifier, SentenceReader
 import lib.etc as etc
 import sys
 
-max_length  = 15
+max_length  = 30
 num_classes = 200
 
 reader = SentenceReader("data/produced_sentences_classifier.csv",

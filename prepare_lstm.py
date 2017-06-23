@@ -64,6 +64,8 @@ def compute_in_out(words):
 
     return pairs
 
+counts = []
+
 for label in labels:
     # Retrieve a list of text files with sentences for that species.
     texts = glob.glob(label + '*.txt')
@@ -81,6 +83,8 @@ for label in labels:
                     for word in tokenize(sentence.rstrip())
                 ]
 
+                counts.append(len(words))
+
                 words  = [ sos ] + [ word2idx(word) for word in words ] + [ eos ]
                 subsets = compute_in_out(words)
 
@@ -88,6 +92,9 @@ for label in labels:
                     sentences.append([ species, text_idx, pair[0], pair[1], pair[2] ])
 
                 sc_sentences.append([ species, text_idx, pair[0], pair[2] ])
+
+with open('data/procued_sentence_lengths.np', 'w') as file:
+    np.save(file, np.array(counts))
 
 with open('data/produced_idx2word.csv', 'w') as file:
     writer = csv.writer(file)
