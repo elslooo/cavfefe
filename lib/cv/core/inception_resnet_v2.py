@@ -199,7 +199,7 @@ def inception_resnet_v2(inputs, num_classes=1001, is_training=True,
           aux = slim.conv2d(aux, 768, aux.get_shape()[1:3],
                             padding='VALID', scope='Conv2d_2a_5x5')
           aux = slim.flatten(aux)
-          aux = slim.fully_connected(aux, num_classes, activation_fn=None,
+          aux = slim.fully_connected(aux, 1001, activation_fn=None,
                                      scope='Logits')
           end_points['AuxLogits'] = aux
 
@@ -233,6 +233,8 @@ def inception_resnet_v2(inputs, num_classes=1001, is_training=True,
         end_points['Conv2d_7b_1x1'] = net
 
         with tf.variable_scope('Logits'):
+          net = tf.stop_gradient(net)
+
           end_points['PrePool'] = net
           net = slim.avg_pool2d(net, net.get_shape()[1:3], padding='VALID',
                                 scope='AvgPool_1a_8x8')

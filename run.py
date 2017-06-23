@@ -1,16 +1,38 @@
+from __future__ import print_function
+import lib.etc as etc
+import sys
 import tensorflow as tf
-from lib.resnet import Resnet
+from lib.cv import VisionModel, InstanceReader
 
-ckpt_name = 'inception_resnet_v2_2016_08_30.ckpt'
+path = 'data/inception_resnet_v2_2016_08_30.ckpt'
+epochs = 2000
+batch_size = 128
 
-session = tf.Session()
-resnet = Resnet(session, ckpt_name)
+reader = InstanceReader("data/produced_cv_instances.csv")
 
-sample_images = ['dog_1.jpg', 'panda_1.jpg', 'panda_2.jpg', 'dog_2.jpg']
+def get_batch(batch_size):
+    return reader.read(lines = batch_size)
 
-print("Printing tuples of (class, features, confidence)")
-print("[!] TIP: look at the webpage below to match classes to labels.")
-print("... https://gist.github.com/yrevar/942d3a0ac09ec9e5eb3a")
+sess  = tf.Session()
+model = VisionModel(num_classes = 2)
 
-for image in sample_images:
-    print(resnet.predict(image))
+model.restore(sess, path)
+
+for step, pi in etc.range(epochs):
+    # Get a batch of training instances.
+    batch_images, batch_labels = get_batch(batch_size)
+    model.train(sess, batch_images, batch_labels)
+
+    # Calculate batch accuracy and loss
+    acc, loss = model.evaluate(sess, batch_images, batch_labels)
+
+    print("Iter " + str(1 + step) + " / " + str(epochs) + \
+          ", Minibatch Loss= " + \
+          "{:.6f}".format(loss) + ", Training Accuracy= " + \
+          "{:.5f}".format(acc) + ", Time Remaining= " + \
+          etc.format_seconds(pi.time_remaining()), file = sys.stderr)
+
+    if (1 + step) % 10 == 0:
+        model.save(sess, 1 + step)
+
+print("Optimization Finished!", file = sys.stderr)

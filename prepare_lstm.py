@@ -9,7 +9,7 @@ pp = pprint.PrettyPrinter()
 # Retrieve a list of species.
 labels = glob.glob('data/cvpr2016_cub/text_c10/*/')
 
-max_length = 15
+max_length = 30
 
 sentences    = []
 sc_sentences = []
@@ -102,6 +102,15 @@ with open('data/produced_idx2instance.csv', 'w') as file:
 
     writer.writerow([ 'index', 'path' ])
 
+    for idx, path in enumerate(instances):
+        writer.writerow([ idx, path ])
+
+with open('data/produced_cv_instances.csv', 'w') as file:
+    writer = csv.writer(file)
+
+    writer.writerow([ 'index', 'path' ])
+
+    shuffle(instances)
     for idx, path in enumerate(instances):
         writer.writerow([ idx, path ])
 
