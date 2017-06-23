@@ -1,9 +1,11 @@
 from lib.lm.core import MultiLSTMCell, dynamic_rnn
 from lib.model import Model
+from sentence_reader import one_hot
 
 import numpy as np
 import os
 import tensorflow as tf
+from tensorflow.contrib.distributions import Categorical
 
 class LanguageModel(Model):
     def __init__(self, max_length, embedding_size, num_hidden,
@@ -66,11 +68,17 @@ class LanguageModel(Model):
         self.pred         = tf.matmul(outputs[:, -1], self.out_W) + self.out_b
         self.pred_softmax = tf.nn.softmax(self.pred)
 
+        # Integrate generated predictions from CNN here
+        self.discr_loss = self.sample_loss(outputs, labels)
+
         # This is the relevance loss of the language model.
-        self.cost = \
+        self.rel_loss = \
         tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits = self.pred,
                                                                labels = self.y))
         optimizer = tf.train.AdamOptimizer(learning_rate = self.learning_rate)
+
+        self.lamb = 0.5
+        self.cost = self.rel_loss - (self.lamb * self.discr_loss)
         self.optimizer = optimizer.minimize(self.cost)
 
         # Evaluate model
@@ -127,3 +135,18 @@ class LanguageModel(Model):
             sentence.append(output)
 
         return sentence
+
+
+    def sample_loss(self, outputs, labels):
+        
+        distributions = [Categorical(probs=output) for output in outputs]
+        sentences = [one_hot(distr.sample()) for distr in distributions]
+        pred = self.predict(sentences)
+        loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits = pred,
+                                                               labels = labels))
+
+        return loss
+
+    def predict(self, sentences):
+        # VIM
+        pass
