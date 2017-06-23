@@ -14,7 +14,7 @@ def get_batch(batch_size):
     return reader.read(lines = batch_size)
 
 sess  = tf.Session()
-model = VisionModel(num_classes = 2)
+model = VisionModel(num_classes = 200)
 
 model.restore(sess, path)
 
@@ -32,7 +32,6 @@ for step, pi in etc.range(epochs):
           "{:.5f}".format(acc) + ", Time Remaining= " + \
           etc.format_seconds(pi.time_remaining()), file = sys.stderr)
 
-    if (1 + step) % 10 == 0:
-        model.save(sess, 1 + step)
+    model.save(sess, 1 + step)
 
 print("Optimization Finished!", file = sys.stderr)

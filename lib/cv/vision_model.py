@@ -10,9 +10,11 @@ TODO: The logits weights and bias are always removed right now. We should add a
 import tensorflow as tf
 from core.inception_resnet_v2 import *
 import numpy as np
-from scipy.misc import imresize, imread
+from scipy.misc import imresize
+from scipy.ndimage import imread
+from lib.model import Model
 
-class VisionModel:
+class VisionModel(Model):
     def __init__(self, num_classes, learning_rate = 0.01):
         self.num_classes   = num_classes
         self.learning_rate = learning_rate
@@ -20,7 +22,7 @@ class VisionModel:
         self._create_placeholders()
         self._build_model()
 
-        self.saver = tf.train.Saver()
+        Model.__init__(self)
 
     def _create_placeholders(self):
         self.image_data = tf.placeholder(tf.float32,
@@ -80,6 +82,7 @@ class VisionModel:
     """
     def _preprocess(self, path):
         image = imread(path, mode = 'RGB')
+
         image = imresize(image, (299, 299))
         image = image / 256.0
         image = image - 0.5
