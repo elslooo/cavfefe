@@ -16,7 +16,7 @@ def get_batch(batch_size):
     return reader.read(lines = batch_size)
 
 batch_size = 128
-epochs     = 2000
+epochs     = 6000
 
 # Network Parameters
 num_hidden = 512 # hidden layer num of features
