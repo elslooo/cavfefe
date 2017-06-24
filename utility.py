@@ -4,8 +4,8 @@ import os, re, sys
 from scipy import ndimage, misc
 import math
 
-sys.path.append('../tensorflow-resnet/')
-from synset import *
+# sys.path.append('../tensorflow-resnet/')
+# from synset import *
 
 
 def retrieve_names_classes(meta_dir, train=True):
@@ -89,16 +89,16 @@ def img_class_to_name(img_class=None):
     return class_names
 
 
-def print_prob(prob):
-    pred = np.argsort(prob)[::-1]
-
-    # Get top1 label
-    top1 = synset[pred[0]]
-    print "Top1: ", top1
-    # Get top5 label
-    top5 = [synset[pred[i]] for i in range(5)]
-    print "Top5: ", top5
-    return top1
+# def print_prob(prob):
+#     pred = np.argsort(prob)[::-1]
+#
+#     # Get top1 label
+#     top1 = synset[pred[0]]
+#     print "Top1: ", top1
+#     # Get top5 label
+#     top5 = [synset[pred[i]] for i in range(5)]
+#     print "Top5: ", top5
+#     return top1
 
 
 def print_operations(sess):

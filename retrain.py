@@ -2,8 +2,7 @@ import tensorflow as tf
 import tensorflow.contrib.slim as slim
 import os
 
-from lib.resnet import Resnet
-from lib.inception_resnet_v2 import *
+from lib.cv.core.inception_resnet_v2 import *
 from tensorflow.contrib.framework.python.ops.variables import get_or_create_global_step
 from tensorflow.contrib.framework import assign_from_checkpoint_fn
 from lib import inception_preprocessing
@@ -17,9 +16,9 @@ NUM_THREADS = 4
 BATCH_SIZE = 1
 IMG_SIZE = 299
 
-tfrc_dir = './CUB_200_2011/images/'
+tfrc_dir = './data/CUB_200_2011/CUB_200_2011/images/'
 ckpt_name = './data/inception_resnet_v2_2016_08_30.ckpt'
-labels_filename = './CUB_200_2011/images/labels.txt'
+labels_filename = './data/CUB_200_2011/CUB_200_2011/images/labels.txt'
 log_dir = './log'
 
 file_initials = 'cub200_2011_tfrc_%s_*.tfrecord'
@@ -37,7 +36,7 @@ config.gpu_options.allow_growth = True
 # config.gpu_options.per_process_gpu_memory_fraction = 0.6
 
 session = tf.Session(config=config)
-resnet = Resnet(session, ckpt_name)
+# resnet = Resnet(session, ckpt_name)
 tf.logging.set_verbosity(tf.logging.INFO)
 
 
@@ -159,4 +158,4 @@ def retrain():
         print 'Final loss: %.3f' % final_loss
 
 
-#retrain()
+retrain()

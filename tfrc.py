@@ -6,8 +6,8 @@ from dataset_utils import write_label_file, _convert_dataset
 
 
 flags = tf.app.flags
-flags.DEFINE_string('dataset_dir', './CUB_200_2011/images', 'str, dataset directory')
-flags.DEFINE_string('metadata_dir', './CUB_200_2011/', 'str, metadata directory')
+flags.DEFINE_string('dataset_dir', './data/CUB_200_2011/CUB_200_2011/images', 'str, dataset directory')
+flags.DEFINE_string('metadata_dir', './data/CUB_200_2011/CUB_200_2011/', 'str, metadata directory')
 flags.DEFINE_integer('num_shards', 10, 'int, number of split in tfrecord')
 flags.DEFINE_string('tfrecord_filename', './cub200_2011_tfrc', 'str, output filename')
 
