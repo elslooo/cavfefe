@@ -11,9 +11,6 @@ def cv_extract_features():
     batch_size = 1
     epochs     = reader.length / batch_size
 
-    def get_batch(batch_size):
-        return reader.read(lines = batch_size)
-
     sess  = tf.Session()
     model = VisionModel(num_classes = 200)
 
@@ -23,7 +20,7 @@ def cv_extract_features():
 
     for step, pi in etc.range(epochs):
         # Get a batch of testing instances.
-        batch_images, _ = get_batch(batch_size)
+        batch_images, _ = reader.read(lines = batch_size)
 
         # Retrieve the first path from the batch.
         path = batch_images[0]
