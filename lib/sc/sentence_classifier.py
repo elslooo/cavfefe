@@ -11,9 +11,10 @@ class SentenceClassifier(Model):
         self.num_classes    = num_classes
         self.learning_rate  = learning_rate
 
-        self._create_placeholders()
-        self._create_weights()
-        self._build_model()
+        with tf.variable_scope("SentenceClassifier"):
+            self._create_placeholders()
+            self._create_weights()
+            self._build_model()
 
         Model.__init__(self)
 
@@ -47,12 +48,14 @@ class SentenceClassifier(Model):
         outputs, final_state = tf.nn.dynamic_rnn(lstm, self.x,
                                                  dtype = tf.float32)
 
-        self.pred = tf.matmul(outputs[:, -1], self.out_W) + self.out_b
+        self.hidden = outputs[:, -1]
+
+        self.pred = tf.matmul(self.hidden, self.out_W) + self.out_b
         self.pred_softmax = tf.nn.softmax(self.pred)
 
-        self.cost = \
-        tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits = self.pred,
-                                                               labels = self.y))
+        ce = tf.nn.softmax_cross_entropy_with_logits(logits = self.pred,
+                                                     labels = self.y)
+        self.cost = tf.reduce_mean(ce)
         optimizer = tf.train.AdamOptimizer(learning_rate = self.learning_rate)
         self.optimizer = optimizer.minimize(self.cost)
 
@@ -65,6 +68,17 @@ class SentenceClassifier(Model):
     """
     def train(self, x, y, sequence_lengths, session):
         session.run(self.optimizer, feed_dict = {
+            self.x: x,
+            self.y: y,
+            self.seqlen: sequence_lengths
+        })
+
+    """
+    This function extracts the activations of the hidden layer for the given
+    batch of sentences.
+    """
+    def extract(self, session, x, y, sequence_lengths):
+        return session.run(self.hidden, feed_dict = {
             self.x: x,
             self.y: y,
             self.seqlen: sequence_lengths

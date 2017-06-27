@@ -1,3 +1,5 @@
+import numpy as np
+
 class RandomReader:
     def __init__(self, path, skip_header_lines = True):
         self.file              = open(path, 'r')
@@ -6,18 +8,26 @@ class RandomReader:
         if self.skip_header_lines:
             self.file.readline()
 
-    def _readline(self):
-        line = self.file.readline()
+        self.cache = []
 
-        if not line:
-            self.file.seek(0, 0)
-
-            if self.skip_header_lines:
-                self.file.readline()
-
+        while True:
             line = self.file.readline()
 
-        return line.rstrip()
+            if not line:
+                break
+
+            self.cache.append(line.rstrip())
+
+        self.length = len(self.cache)
+        self.order  = np.random.permutation(np.arange(self.length))
+        self.cache  = np.array(self.cache)[self.order]
+        self.cursor = 0
+
+    def _readline(self):
+        self.cursor %= self.length
+        self.cursor += 1
+
+        return self.cache[self.cursor - 1]
 
     def read(self, lines = 10):
         return [

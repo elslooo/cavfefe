@@ -39,4 +39,4 @@ class SentenceReader(RandomReader):
         label    = self.string_to_number(label)
         features = self.one_hot(label, 100)
 
-        return (sentences, words, length, features)
+        return (sentences, features, words, length)
