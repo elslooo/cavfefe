@@ -13,24 +13,23 @@ from pycocoevalcap.cider import cider
 from pycocoevalcap.tokenizer.ptbtokenizer import PTBTokenizer
 
 
-def compute_cider(gen, gt, tfidf_gt=None):
+def compute_cider(gen, gt):
+    
     cider_scorer = cider.Cider()
-    # TODO: Verify to see if we need to input tf-idf into the score calculation
-    # score, scores = cider_scorer.compute_score(gt, gen, tfidf_gt)
-    score, scores = cider_scorer.compute_score(gt, gen)
-    return scores, cider_scorer.imgIds
+    scores, imgIds = cider_scorer.compute_score(gt, gen)
+    return scores, imgIds
 
 
 def eval_class_meteor(tag):
     # Make the reference for an image all reference sentences from the corresponding class.
-    if not os.path.isdir('cider_scores'):
-        os.mkdir('cider_scores')
+    # if not os.path.isdir('cider_scores'):
+    #     os.mkdir('cider_scores')
 
     # combine gt annotations for each class
     # TODO: define the annotation path
     # anno_path_ref = eval_generation.determine_anno_path(dataset, gt_comp)
     # TODO: Convert the current annotation to the SAME format
-    ground_truth_annotation_path = './data/TMP_descriptions_bird.train_noCub.fg.json'
+    ground_truth_annotation_path = 'caption_test.json'
 
     # TODO: Convert the generated sentence to the same format
     gen_annotations = './generated_sentences/TMP_generation_result.json'
@@ -39,12 +38,12 @@ def eval_class_meteor(tag):
     gen_annotations = read_json(gen_annotations)
   
     # create tfidf dict
-    tfidf_dict = {}
-    for a in ref_annotations['annotations']:
-        im = a['image_id']
-        if im not in tfidf_dict.keys():  # if image id is not in ...
-            tfidf_dict[im] = list()
-        tfidf_dict[im].append({'caption': a['caption'], 'id': a['image_id'], 'image_id': a['image_id']})
+    # tfidf_dict = {}
+    # for a in ref_annotations['annotations']:
+    #     im = a['image_id']
+    #     if im not in tfidf_dict.keys():  # if image id is not in ...
+    #         tfidf_dict[im] = list()
+    #     tfidf_dict[im].append({'caption': a['caption'], 'id': a['image_id'], 'image_id': a['image_id']})
 
     # create dict which has all annotations which correspond to a certain class in the reference set
     gt_class_annotations = {}
@@ -71,7 +70,7 @@ def eval_class_meteor(tag):
     # for tokenizer need dict with list of dicts
     t = time.time()
     tokenizer = PTBTokenizer()
-    tfidf_dict = tokenizer.tokenize(tfidf_dict)
+    # tfidf_dict = tokenizer.tokenize(tfidf_dict)
     for key in gt_class_annotations:
         gt_class_annotations[key] = tokenizer.tokenize(gt_class_annotations[key])
     for key in gen_class_annotations:
@@ -87,12 +86,12 @@ def eval_class_meteor(tag):
             for im in sorted(gen_class_annotations[cl].keys()):
                 gen[im+('_%d' % cl_gt)] = gen_class_annotations[cl][im]
                 gts[im+('_%d' % cl_gt)] = gt_class_annotations[cl_gt]['all_images']
-        scores, im_ids = compute_cider(gen, gts, tfidf_dict)
+        scores, im_ids = compute_cider(gen, gts)
         for s, ii in zip(scores, im_ids):
             score_dict[ii] = s
         print "Class %s took %f s." % (cl, time.time() - t)
 
-    pkl.dump(score_dict, open('cider_scores/cider_score_dict_%s.p' %(tag), 'w'))
+        pkl.dump(score_dict, open('cider_scores/cider_score_dict_%s.p' %(tag), 'w'))
 
 
 if __name__ == '__main__':
@@ -103,5 +102,9 @@ if __name__ == '__main__':
     # args = parser.parse_args()
 
     # eval_class_meteor(args.tag)
-    eval_class_meteor('description_1006')
+    # eval_class_meteor('description_1006')
+    with open('cider_scores/cider_score_dict_description_1006.p') as f:
+        data = pkl.load(f)
+
+    print data
 

@@ -20,7 +20,6 @@ class Cider:
         self._n = n
         # set the standard deviation parameter for gaussian penalty
         self._sigma = sigma
-	self.imgIds = list()
 
     def compute_score(self, gts, res):
         """
@@ -31,11 +30,11 @@ class Cider:
         """
 
         assert(gts.keys() == res.keys())
-        self.imgIds = gts.keys()
+        imgIds = gts.keys()
 
         cider_scorer = CiderScorer(n=self._n, sigma=self._sigma)
 
-        for id in self.imgIds:
+        for id in imgIds:
             hypo = res[id]
             ref = gts[id]
 
@@ -49,7 +48,7 @@ class Cider:
 
         (score, scores) = cider_scorer.compute_score()
 
-        return score, scores
+        return scores, imgIds
 
     def method(self):
         return "CIDEr"
