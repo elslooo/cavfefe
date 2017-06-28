@@ -1,6 +1,5 @@
 from lib.lm.core import MultiLSTMCell, dynamic_rnn
 from lib.model import Model
-from sentence_reader import one_hot
 
 import numpy as np
 import os
@@ -15,9 +14,10 @@ class LanguageModel(Model):
         self.num_hidden     = num_hidden
         self.learning_rate  = learning_rate
 
-        self._create_placeholders()
-        self._create_weights()
-        self._build_model()
+        with tf.variable_scope("LanguageModel"):
+            self._create_placeholders()
+            self._create_weights()
+            self._build_model()
 
         Model.__init__(self)
 
@@ -68,17 +68,12 @@ class LanguageModel(Model):
         self.pred         = tf.matmul(outputs[:, -1], self.out_W) + self.out_b
         self.pred_softmax = tf.nn.softmax(self.pred)
 
-        # Integrate generated predictions from CNN here
-        self.discr_loss = self.sample_loss(outputs, labels)
-
         # This is the relevance loss of the language model.
-        self.rel_loss = \
-        tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits = self.pred,
-                                                               labels = self.y))
+        ce = tf.nn.softmax_cross_entropy_with_logits(logits = self.pred,
+                                                     labels = self.y)
+        self.cost = tf.reduce_mean(ce)
         optimizer = tf.train.AdamOptimizer(learning_rate = self.learning_rate)
 
-        self.lamb = 0.5
-        self.cost = self.rel_loss - (self.lamb * self.discr_loss)
         self.optimizer = optimizer.minimize(self.cost)
 
         # Evaluate model
@@ -88,7 +83,7 @@ class LanguageModel(Model):
     """
     This function trains the language model on a batch of sentences.
     """
-    def train(self, x, f, y, sequence_lengths, session):
+    def train(self, session, x, f, y, sequence_lengths):
         session.run(self.optimizer, feed_dict = {
             self.x: x,
             self.f: f,
@@ -100,7 +95,7 @@ class LanguageModel(Model):
     This function evaluates the accuracy and loss of the language model on the
     given batch of sentences.
     """
-    def evaluate(self, x, f, y, sequence_lengths, session):
+    def evaluate(self, session, x, f, y, sequence_lengths):
         acc, loss = session.run([ self.accuracy, self.cost ], feed_dict = {
             self.x: x,
             self.f: f,
@@ -110,7 +105,7 @@ class LanguageModel(Model):
 
         return acc, loss
 
-    def generate(self, f, session):
+    def generate(self, session, features):
         sos = [ 1 ] + [ 0 ] * (self.embedding_size - 1)
         eos = [ 0, 1 ] + [ 0 ] * (self.embedding_size - 2)
 
@@ -126,7 +121,7 @@ class LanguageModel(Model):
 
             output = session.run(self.pred_softmax, feed_dict = {
                 self.x: input,
-                self.f: [ f ],
+                self.f: [ features ],
                 self.seqlen: [ len(sentence) ]
             })[0]
 
@@ -135,18 +130,3 @@ class LanguageModel(Model):
             sentence.append(output)
 
         return sentence
-
-
-    def sample_loss(self, outputs, labels):
-        
-        distributions = [Categorical(probs=output) for output in outputs]
-        sentences = [one_hot(distr.sample()) for distr in distributions]
-        pred = self.predict(sentences)
-        loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits = pred,
-                                                               labels = labels))
-
-        return loss
-
-    def predict(self, sentences):
-        # VIM
-        pass

@@ -24,6 +24,9 @@ class VisionModel(Model):
 
         Model.__init__(self)
 
+    def restore(self, session, path):
+        Model.restore(self, session, path, scope = "InceptionResnetV2")
+
     def _create_placeholders(self):
         self.image_data = tf.placeholder(tf.float32,
                                          shape = (None, 299, 299, 3))
@@ -52,9 +55,12 @@ class VisionModel(Model):
                                 tf.argmax(self.labels, 1))
         self.accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
 
-    def restore(self, session, path):
+    def restore(self, session, path, last_layer = True):
         # Remove the logits weights and bias.
-        variables = self.variables[0 : -2]
+        if last_layer:
+            variables = self.variables[:]
+        else:
+            variables = self.variables[: -2]
 
         saver = tf.train.Saver(var_list = variables)
         saver.restore(session, path)
@@ -83,7 +89,6 @@ class VisionModel(Model):
     def _preprocess(self, path):
         image = imread(path, mode = 'RGB')
 
-        image = imresize(image, (299, 299))
         image = image / 256.0
         image = image - 0.5
         image = image * 2.0
@@ -115,7 +120,7 @@ class VisionModel(Model):
     batch size. The input items should be paths to images that are loaded into
     memory when needed.
     """
-    def train(self, session, paths, labels):
+    def train(self, session, paths = None, labels = None):
         session.run(self.optimizer, feed_dict = {
             self.image_data: [
                 self._preprocess(path)

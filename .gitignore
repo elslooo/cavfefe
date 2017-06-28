@@ -7,3 +7,5 @@ log/*
 
 checkpoints/*
 das/*
+logs/*
+pretrained/*
