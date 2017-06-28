@@ -1,2 +1,3 @@
+from embedding_cache import EmbeddingCache
 from sentence_classifier import SentenceClassifier
 from sentence_reader import SentenceReader

@@ -22,6 +22,8 @@ if __name__ == '__main__':
         sc_prepare()
     elif task == '--sc-train':
         sc_train()
+    elif task == '--sc-evaluate':
+        sc_evaluate()
     elif task == '--sc-extract-embeddings':
         sc_extract_embeddings()
     elif task == '--lm-prepare':

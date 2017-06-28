@@ -18,11 +18,7 @@ class SentenceReader(RandomReader):
             int(string) for string in strings
         ]
 
-    def read(self, lines = 10):
-        results = RandomReader.read(self, lines = lines)
-
-        results = [ result.split(',') for result in results ]
-
+    def _process(self, results):
         labels, instance, sentences, length = \
         list(map(list, zip(*results)))
 
@@ -38,3 +34,20 @@ class SentenceReader(RandomReader):
         labels = self.one_hot(labels, self.num_classes)
 
         return (sentences, labels, length)
+
+    def query(self, label):
+        results = []
+
+        for line in self.cache:
+            line = line.split(',')
+
+            if int(line[0]) == label:
+                results.append(line)
+
+        return self._process(results)
+
+    def read(self, lines = 10):
+        results = RandomReader.read(self, lines = lines)
+        results = [ result.split(',') for result in results ]
+
+        return self._process(results)

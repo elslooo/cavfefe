@@ -34,3 +34,6 @@ class RandomReader:
             self._readline()
             for line in range(lines)
         ]
+
+    def __len__(self):
+        return self.length
