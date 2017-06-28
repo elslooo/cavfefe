@@ -1,5 +1,14 @@
 # Cavfefe
 
+## TODOs
+
+- If you download a checkpoint with a BasicLSTMCell (such as the language model
+  and the sentence classifier) from the DAS, it will not be accepted by our
+  local Tensorflow installations because the variable names were changed after
+  Tensorflow 1.0. Therefore, run `fix_basic_lstm.sh` with the path to the
+  checkpoint (e.g. `pretrained/sc/SentenceClassifier`) to replace the old names
+  with the new ones.
+
 ## Preparing the Dataset
 
 ### Building a Vocabulary

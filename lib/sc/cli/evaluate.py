@@ -2,48 +2,50 @@ from __future__ import print_function
 import tensorflow as tf
 import numpy as np
 from lib.ds import Vocabulary
-from lib.sc import SentenceClassifier, SentenceReader, EmbeddingCache
+from lib.sc import SentenceClassifier, SentenceReader
 import lib.etc as etc
 import sys
-import progressbar
 
-def sc_extract_embeddings():
+def sc_evaluate():
     max_length     = 30
     num_classes    = 200
     embedding_size = len(Vocabulary().restore("data/ds/vocabulary.csv"))
 
-    reader = SentenceReader("data/sc/training.csv",
+    reader = SentenceReader("data/sc/testing.csv",
                             num_classes, embedding_size = embedding_size)
 
-    epochs     = num_classes
+    batch_size = 256
+    epochs     = len(reader) / batch_size
 
     # Network Parameters
     num_hidden = 512 # hidden layer num of features
 
+    tf.reset_default_graph()
     model = SentenceClassifier(max_length, embedding_size,
                                num_hidden, num_classes)
 
     init = tf.global_variables_initializer()
-
-    cache = EmbeddingCache()
 
     with tf.Session() as sess:
         sess.run(init)
 
         model.restore(sess, "pretrained/sc/SentenceClassifier")
 
+        total_acc = 0.0
+        total_cnt = 0.0
+
         for step, pi in etc.range(epochs):
             # Get a batch of training instances.
-            batch_x, batch_y, batch_len = reader.query(label = step + 1)
+            batch_x, batch_y, batch_len = reader.read(lines = batch_size)
 
             # Calculate batch accuracy and loss
-            activations = model.extract(sess, batch_x, batch_y, batch_len)
-            embedding   = np.mean(activations, axis = 0)
+            acc, loss = model.evaluate(batch_x, batch_y, batch_len, sess)
 
-            cache.set(step + 1, embedding)
+            total_acc += acc
+            total_cnt += 1.0
 
             print("Iter " + str(1 + step) + " / " + str(epochs) + \
+                  ", Validation Accuracy= " + \
+                  "{:.5f}".format(total_acc / total_cnt) + \
                   ", Time Remaining= " + \
                   etc.format_seconds(pi.time_remaining()), file = sys.stderr)
-
-    cache.save("data/sc/embeddings.csv")
