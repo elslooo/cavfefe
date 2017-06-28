@@ -83,3 +83,29 @@ other models.
 ```
 python cavfefe.py --sc-train
 ```
+
+### Evaluation
+
+Again, we need to evaluate the accuracy of the sentence classifier before
+proceeding with the rest of the project. The authors of the paper mention they
+achieved 22% classification error on their validation set. We managed to get
+21.754% which is close enough. Note that our model uses 512 hidden units
+(instead of 1000).
+
+```
+python cavfefe.py --sc-evaluate
+```
+
+### Embedding Extraction
+
+In addition to the features we retrieve from the computer vision model, we also
+want to concatenate a class embedding to the input of the language model. The
+authors of the paper take the average over all activations of sentences in the
+training set per class. For each class, we have 30 examples with 10 sentences
+each, so for each class we take the average over 300 512-dimensional vectors and
+end up with 200 512-dimensional vectors, one for each class. This command writes
+the embeddings to disk.
+
+```
+python cavfefe.py --sc-extract-embeddings
+```
