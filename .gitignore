@@ -9,3 +9,8 @@ checkpoints/*
 das/*
 logs/*
 pretrained/*
+
+cider_scores/*
+meteor_scores/*
+
+lib/coco/coco-caption-eval/pycocoevalcap/tokenizer/*

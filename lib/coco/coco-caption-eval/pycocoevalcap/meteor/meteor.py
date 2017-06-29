@@ -22,6 +22,8 @@ class Meteor:
                 stdin=subprocess.PIPE, \
                 stdout=subprocess.PIPE, \
                 stderr=subprocess.PIPE)
+
+        self.imgIds = list()
         # Used to guarantee thread safety
         self.lock = threading.Lock()
 
@@ -43,7 +45,7 @@ class Meteor:
         score = float(self.meteor_p.stdout.readline().strip())
         self.lock.release()
 
-        return score, scores
+        return scores, imgIds
 
     def method(self):
         return "METEOR"
