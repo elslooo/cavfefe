@@ -9,7 +9,7 @@ def cv_train():
     batch_size = 128
 
     reader = InstanceReader("data/cv/training.csv")
-    epochs = reader.length / 128 * 2
+    epochs = reader.length / 128 * 10
 
     def get_batch(batch_size):
         return reader.read(lines = batch_size)
@@ -21,7 +21,7 @@ def cv_train():
 
     for step, pi in etc.range(epochs):
         # Get a batch of training instances.
-        batch_images, batch_labels = get_batch(batch_size)
+        batch_ids, batch_images, batch_labels = get_batch(batch_size)
         model.train(sess, batch_images, batch_labels)
 
         # Calculate batch accuracy and loss

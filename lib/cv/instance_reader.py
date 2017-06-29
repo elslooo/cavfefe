@@ -4,8 +4,8 @@ class InstanceReader(RandomReader):
     def __init__(self, path):
         RandomReader.__init__(self, path)
 
-    def _preprocess(self, name, label):
-        return ('data/cv/images/' + name, int(label))
+    def _preprocess(self, id, name, label):
+        return (id, 'data/cv/images/' + name, int(label))
 
     def read(self, lines = 10):
         results = RandomReader.read(self, lines = lines)

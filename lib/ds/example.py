@@ -20,6 +20,10 @@ class Example:
 
         return words
 
+    def image_path(self):
+        return self.datadir + '/CUB_200_2011/CUB_200_2011/images/' + \
+               self.path + '.jpg'
+
     def sentences(self):
         path = self.datadir + "/cvpr2016_cub/text_c10/" + self.path + ".txt"
 

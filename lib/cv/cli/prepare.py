@@ -2,11 +2,10 @@ from scipy.misc import imread, imresize, imsave
 import progressbar
 import os
 import csv
+from lib.ds import Dataset
 
 def cv_prepare():
-    images = open('data/CUB_200_2011/CUB_200_2011/images.txt', 'r')
-    splits = open('data/CUB_200_2011/CUB_200_2011/train_test_split.txt', 'r')
-    labels = open('data/CUB_200_2011/CUB_200_2011/image_class_labels.txt', 'r')
+    dataset = Dataset()
 
     try:
         os.makedirs('data/cv')
@@ -17,44 +16,45 @@ def cv_prepare():
     training = csv.writer(open('data/cv/training.csv', 'w'))
     testing  = csv.writer(open('data/cv/testing.csv', 'w'))
 
-    training.writerow([ "path", "label" ])
-    testing.writerow([ "path", "label" ])
+    all.writerow([ "id", "path", "label" ])
+    training.writerow([ "id", "path", "label" ])
+    testing.writerow([ "id", "path", "label" ])
 
     with progressbar.ProgressBar(max_value = 11788) as bar:
         i = 0
 
-        while True:
-            line = images.readline()
-
-            if line is None or line.rstrip() == '':
-                break
-
-            line  = line.rstrip()
-            name  = line.split(' ')[1]
-
-            label = int(labels.readline().rstrip().split(' ')[1])
-            skip  = int(splits.readline().rstrip().split(' ')[1])
-
-            image = imread('data/CUB_200_2011/CUB_200_2011/images/' + name,
-                           mode = 'RGB')
+        for example in dataset.examples():
+            image = imread(example.image_path(), mode = 'RGB')
             image = imresize(image, (299, 299))
             image = image / 256.0
             image = image - 0.5
             image = image * 2.0
 
             try:
-                os.makedirs('data/cv/images/' + os.path.dirname(name))
+                os.makedirs('data/cv/images/' + os.path.dirname(example.path))
             except:
                 pass
 
-            imsave('data/cv/images/' + name, image)
+            imsave('data/cv/images/' + example.path + '.jpg', image)
 
-            if skip:
-                testing.writerow([ name, str(label) ])
+            if example.is_training:
+                training.writerow([
+                    example.id,
+                    example.path + '.jpg',
+                    str(example.species)
+                ])
             else:
-                training.writerow([ name, str(label) ])
+                testing.writerow([
+                    example.id,
+                    example.path + '.jpg',
+                    str(example.species)
+                ])
 
-            all.writerow([ name, str(label) ])
+            all.writerow([
+                example.id,
+                example.path + '.jpg',
+                str(example.species)
+            ])
 
             i += 1
 

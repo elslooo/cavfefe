@@ -5,7 +5,7 @@ import tensorflow as tf
 from lib.cv import VisionModel, InstanceReader
 
 def cv_evaluate():
-    path = 'pretrained/VisionModel'
+    path = 'pretrained/cv/VisionModel'
 
     reader     = InstanceReader("data/cv/testing.csv")
     batch_size = 64

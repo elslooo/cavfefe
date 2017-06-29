@@ -1,4 +1,5 @@
 import csv
+import numpy as np
 import os
 
 class FeatureCache:
@@ -6,17 +7,28 @@ class FeatureCache:
         self.labels   = dict()
         self.features = dict()
 
-    def set(self, path, label, features):
-        self.labels[path]   = label
-        self.features[path] = features
+    def set(self, id, label, features):
+        self.labels[id]   = label
+        self.features[id] = features
 
-    def get(self, path):
-        return (self.labels[path], self.features[path])
+    def get(self, id):
+        return (self.labels[id], self.features[id])
 
     def restore(self, path):
         with open(path, 'r') as file:
+            file.readline()
+
             reader = csv.reader(file)
-            reader.read()
+
+            for row in reader:
+                id      = int(row[0])
+                label   = int(row[1])
+                feature = np.array([
+                    float(x)
+                    for x in row[2].split('|')
+                ])
+
+                self.set(id, label, feature)
 
     def save(self, path):
         try:
@@ -26,13 +38,13 @@ class FeatureCache:
 
         with open(path, 'w') as file:
             writer = csv.writer(file)
-            writer.writerow([ 'path', 'label', 'features' ])
+            writer.writerow([ 'id', 'label', 'features' ])
 
-            for path in self.labels:
+            for id in self.labels:
                 writer.writerow([
-                    path,
-                    str(self.labels[path]),
+                    id,
+                    str(self.labels[id]),
                     '|'.join([
-                        str(x) for x in self.features[path]
+                        str(x) for x in self.features[id]
                     ])
                 ])
