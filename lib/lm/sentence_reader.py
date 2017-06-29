@@ -22,7 +22,7 @@ class SentenceReader(RandomReader):
 
         results = [ result.split(',') for result in results ]
 
-        label, instance, sentences, words, length = \
+        label, instances, sentences, words, length = \
         list(map(list, zip(*results)))
 
         sentences = [ sentence.split("|") for sentence in sentences ]
@@ -31,12 +31,13 @@ class SentenceReader(RandomReader):
         sentences = [ self.one_hot(sentence, self.embedding_size)
                       for sentence in sentences ]
 
+        instances = [ int(instance) for instance in instances ]
+
         words = [ int(word) for word in words ]
         words = self.one_hot(words, self.embedding_size)
 
         length = self.string_to_number(length)
 
         label    = self.string_to_number(label)
-        features = self.one_hot(label, 100)
 
-        return (sentences, features, words, length)
+        return (instances, label, sentences, words, length)

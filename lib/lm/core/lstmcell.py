@@ -37,7 +37,7 @@ class MultiLSTMCell(tf.contrib.rnn.MultiRNNCell):
             new_states.append(new_state)
         with vs.variable_scope("cell_1"):
             cur_state = state[1]
-            
+
             # Concatenate here
             # Original input is 128 x 200 in this case
             cur_inp = tf.concat([cur_inp, im_features], 1)
@@ -48,5 +48,3 @@ class MultiLSTMCell(tf.contrib.rnn.MultiRNNCell):
         new_states = tuple(new_states)
 
         return cur_inp, new_states
-
-

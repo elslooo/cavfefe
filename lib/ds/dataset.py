@@ -47,3 +47,13 @@ class Dataset:
                                    datadir     = self.path))
 
         return results
+
+    def example(self, index):
+        if not hasattr(self, '_cache'):
+            self._cache = self.examples()
+
+        for example in self._cache:
+            if example.id == index:
+                return example
+
+        return None

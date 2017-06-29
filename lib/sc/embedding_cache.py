@@ -1,4 +1,5 @@
 import csv
+import numpy as np
 import os
 
 class EmbeddingCache:
@@ -13,8 +14,18 @@ class EmbeddingCache:
 
     def restore(self, path):
         with open(path, 'r') as file:
+            file.readline()
+
             reader = csv.reader(file)
-            reader.read()
+
+            for row in reader:
+                label     = int(row[0])
+                embedding = np.array([
+                    float(x)
+                    for x in row[1].split('|')
+                ])
+
+                self.set(label, embedding)
 
     def save(self, path):
         try:

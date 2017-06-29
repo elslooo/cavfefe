@@ -7,10 +7,11 @@ import tensorflow as tf
 from tensorflow.contrib.distributions import Categorical
 
 class LanguageModel(Model):
-    def __init__(self, max_length, embedding_size, num_hidden,
+    def __init__(self, max_length, embedding_size, feature_size, num_hidden,
                  learning_rate = 0.01):
         self.max_length     = max_length
         self.embedding_size = embedding_size
+        self.feature_size   = feature_size
         self.num_hidden     = num_hidden
         self.learning_rate  = learning_rate
 
@@ -28,7 +29,8 @@ class LanguageModel(Model):
 
         # F is a batch of feature vectors: one for each training instance. These
         # features are retrieved from the image classification model (resnet).
-        self.f = tf.placeholder("float", [ None, 100 ], name = "f")
+        self.f = tf.placeholder("float", [ None,
+                                           self.feature_size ], name = "f")
 
         # This is the sequence length for each sentence in the batch. This does
         # include the start-of-sentence marker, but does not include the
@@ -45,14 +47,14 @@ class LanguageModel(Model):
         # / input layer of the second LSTM to the output layer of the second
         # LSTM. Note that in our implementation, this does not include the
         # feature embedding size.
-        self.out_W = tf.Variable(tf.random_normal([
+        self.out_W = tf.Variable(tf.random_uniform([
             self.num_hidden,
             self.embedding_size
-        ]))
+        ], -1, 1))
 
-        self.out_b = tf.Variable(tf.random_normal([
+        self.out_b = tf.Variable(tf.random_uniform([
             self.embedding_size
-        ]))
+        ], -1, 1))
 
     def _build_model(self):
         # The model consists of two LSTMs. The first LSTM turns a sequence of
@@ -80,16 +82,23 @@ class LanguageModel(Model):
         correct_pred = tf.equal(tf.argmax(self.pred, 1), tf.argmax(self.y, 1))
         self.accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
 
+        tf.summary.scalar("accuracy", self.accuracy)
+        tf.summary.scalar("cost", self.cost)
+        tf.summary.histogram("out_W", self.out_W)
+        tf.summary.histogram("out_b", self.out_b)
+
+        self.summary = tf.summary.merge_all()
+
     """
     This function trains the language model on a batch of sentences.
     """
     def train(self, session, x, f, y, sequence_lengths):
-        session.run(self.optimizer, feed_dict = {
+        return session.run([ self.optimizer, self.summary ], feed_dict = {
             self.x: x,
             self.f: f,
             self.y: y,
             self.seqlen: sequence_lengths
-        })
+        })[1]
 
     """
     This function evaluates the accuracy and loss of the language model on the
