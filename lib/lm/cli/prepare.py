@@ -46,13 +46,14 @@ def lm_prepare():
                      [ eos ]
             subsets = compute_in_out(words)
 
-            for pair in subsets:
-                if example.is_training:
-                    training.append([ example.species, example.id,
-                                      pair[0], pair[1], pair[2] ])
-                else:
-                    testing.append([ example.species, example.id,
-                                     pair[0], pair[1], pair[2] ])
+            # for pair in subsets:
+            pair = subsets[-1]
+            if example.is_training:
+                training.append([ example.species, example.id,
+                                  pair[0], pair[1], pair[2] ])
+            else:
+                testing.append([ example.species, example.id,
+                                 pair[0], pair[1], pair[2] ])
 
     try:
         os.makedirs("data/lm")

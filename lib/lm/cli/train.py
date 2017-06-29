@@ -80,11 +80,11 @@ def lm_train():
                   etc.format_seconds(pi.time_remaining()), file = sys.stderr)
 
             # Generate a sample sentence after each 10 iterations.
-            if (1 + step) % 10 == 0:
+            if (1 + step) % 1 == 0:
                 sentence = model.generate(sess, features[0])
 
                 print(vocabulary.sentence([
-                    np.argmax(word) for word in sentence
+                    word for word in sentence
                 ]), file = sys.stderr)
 
                 model.save(sess, step)

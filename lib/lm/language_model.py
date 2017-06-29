@@ -5,6 +5,7 @@ import numpy as np
 import os
 import tensorflow as tf
 from tensorflow.contrib.distributions import Categorical
+from decoder import Decoder
 
 class LanguageModel(Model):
     def __init__(self, max_length, embedding_size, feature_size, num_hidden,
@@ -57,30 +58,17 @@ class LanguageModel(Model):
         ], -1, 1))
 
     def _build_model(self):
-        # The model consists of two LSTMs. The first LSTM turns a sequence of
-        # words into a single latent variable.
-        lstm = MultiLSTMCell([
-            tf.contrib.rnn.BasicLSTMCell(self.num_hidden, forget_bias = 1.0)
-            for _ in range(2)
-        ])
+        self.decoder = Decoder(self.x, self.f, self.seqlen, self.embedding_size)
+        self.cost = self.decoder.loss
 
-        outputs, final_state = dynamic_rnn(lstm, self.x, self.f,
-                                           dtype = tf.float32)
-
-        self.pred         = tf.matmul(outputs[:, -1], self.out_W) + self.out_b
-        self.pred_softmax = tf.nn.softmax(self.pred)
-
-        # This is the relevance loss of the language model.
-        ce = tf.nn.softmax_cross_entropy_with_logits(logits = self.pred,
-                                                     labels = self.y)
-        self.cost = tf.reduce_mean(ce)
         optimizer = tf.train.AdamOptimizer(learning_rate = self.learning_rate)
 
         self.optimizer = optimizer.minimize(self.cost)
 
         # Evaluate model
-        correct_pred = tf.equal(tf.argmax(self.pred, 1), tf.argmax(self.y, 1))
-        self.accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
+        # correct_pred = tf.equal(tf.argmax(self.pred, 1), tf.argmax(self.y, 1))
+        # self.accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
+        self.accuracy = self.decoder.accuracy
 
         tf.summary.scalar("accuracy", self.accuracy)
         tf.summary.scalar("cost", self.cost)
@@ -115,27 +103,34 @@ class LanguageModel(Model):
         return acc, loss
 
     def generate(self, session, features):
-        sos = [ 1 ] + [ 0 ] * (self.embedding_size - 1)
-        eos = [ 0, 1 ] + [ 0 ] * (self.embedding_size - 2)
+        results = session.run(self.decoder.sampler, {
+            self.f: [ features for i in range(128) ]
+        })
 
-        sentence = [ sos ]
+        print(results)
 
-        for i in range(self.max_length - 1):
-            input    = sentence[:]
-
-            while len(input) < self.max_length:
-                input = input + [ eos ]
-
-            input = np.array([ input ])
-
-            output = session.run(self.pred_softmax, feed_dict = {
-                self.x: input,
-                self.f: [ features ],
-                self.seqlen: [ len(sentence) ]
-            })[0]
-
-            word_index = np.argmax(output)
-
-            sentence.append(output)
-
-        return sentence
+        return results[0]
+        # sos = [ 1 ] + [ 0 ] * (self.embedding_size - 1)
+        # eos = [ 0, 1 ] + [ 0 ] * (self.embedding_size - 2)
+        #
+        # sentence = [ sos ]
+        #
+        # for i in range(self.max_length - 1):
+        #     input    = sentence[:]
+        #
+        #     while len(input) < self.max_length:
+        #         input = input + [ eos ]
+        #
+        #     input = np.array([ input ])
+        #
+        #     output = session.run(self.pred_softmax, feed_dict = {
+        #         self.x: input,
+        #         self.f: [ features ],
+        #         self.seqlen: [ len(sentence) ]
+        #     })[0]
+        #
+        #     word_index = np.argmax(output)
+        #
+        #     sentence.append(output)
+        #
+        # return sentence
