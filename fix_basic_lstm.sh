@@ -1,6 +1,6 @@
 #!/bin/bash
 
-path="pretrained/sc/SentenceClassifier"
+path=$1
 
 python tensorflow_rename_variables.py \
        --checkpoint_dir="$path" \

@@ -13,4 +13,6 @@ pretrained/*
 cider_scores/*
 meteor_scores/*
 
+products/*
+
 lib/coco/coco-caption-eval/pycocoevalcap/tokenizer/*

@@ -104,12 +104,10 @@ class LanguageModel(Model):
 
     def generate(self, session, features):
         results = session.run(self.decoder.sampler, {
-            self.f: [ features for i in range(128) ]
+            self.f: features
         })
 
-        print(results)
-
-        return results[0]
+        return results
         # sos = [ 1 ] + [ 0 ] * (self.embedding_size - 1)
         # eos = [ 0, 1 ] + [ 0 ] * (self.embedding_size - 2)
         #

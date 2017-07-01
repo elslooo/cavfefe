@@ -8,8 +8,9 @@ import lib.lm as lm
 import lib.etc as etc
 import sys
 import os
+import json
 
-def lm_train():
+def lm_generate():
     max_length = 30
 
     dataset = Dataset()
@@ -22,7 +23,7 @@ def lm_train():
                                embedding_size = embedding_size)
 
     batch_size = 128
-    epochs     = 5000
+    epochs     = len(reader) / batch_size
 
     # Network Parameters
     num_hidden = 512 # hidden layer num of features
@@ -50,6 +51,10 @@ def lm_train():
     with tf.Session() as sess:
         sess.run(init)
 
+        model.restore(sess, "pretrained/lm/LanguageModel")
+
+        results = []
+
         for step, pi in etc.range(epochs):
             # Get a batch of training instances.
             instances, labels, sentences, words, lengths = \
@@ -60,34 +65,34 @@ def lm_train():
                 for index in instances
             ]
 
+            labels = [ label for label, feature in features ]
+
             features = [
                 np.concatenate([ embedding_cache.get(label), feature ])
                 for label, feature in features
             ]
 
-            # Run optimization op (backprop)
-            summary = model.train(sess, sentences, features, words, lengths)
-            writer.add_summary(summary, step)
-
-            # Calculate batch accuracy and loss
-            acc, loss = model.evaluate(sess, sentences, features,
-                                       words, lengths)
+            sentences = model.generate(sess, features)
 
             print("Iter " + str(1 + step) + " / " + str(epochs) + \
-                  ", Minibatch Loss= " + \
-                  "{:.6f}".format(loss) + ", Training Accuracy= " + \
-                  "{:.5f}".format(acc) + ", Time Remaining= " + \
+                  ", Time Remaining= " + \
                   etc.format_seconds(pi.time_remaining()), file = sys.stderr)
 
-            # Generate a sample sentence after each 10 iterations.
-            if (1 + step) % 1 == 0:
-                sentences = model.generate(sess, features)
-
-                for sentence in sentences:
-                    print(vocabulary.sentence([
+            for i, sentence in enumerate(sentences):
+                results.append({
+                    "image_id": dataset.example(instances[i]).path + ".jpg",
+                    "caption": vocabulary.sentence([
                         word for word in sentence
-                    ]), file = sys.stderr)
+                    ])
+                })
 
-                model.save(sess, step)
+            if step % 10 == 0:
+                try:
+                    os.makedirs("products")
+                except:
+                    pass
+
+                with open('products/sentences.json', 'w') as file:
+                    json.dump(results, file)
 
         print("Optimization Finished!", file = sys.stderr)

@@ -30,3 +30,5 @@ if __name__ == '__main__':
         lm_prepare()
     elif task == '--lm-train':
         lm_train()
+    elif task == '--lm-generate':
+        lm_generate()

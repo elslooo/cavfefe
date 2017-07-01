@@ -13,7 +13,7 @@ class Vocabulary:
         return self.words[index]
 
     def sentence(self, indices):
-        return [ self.word(index) for index in indices ]
+        return " ".join([ self.word(index) for index in indices ])
 
     def add(self, word):
         if word in self.inverted_index:
