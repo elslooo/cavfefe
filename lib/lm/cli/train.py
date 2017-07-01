@@ -65,8 +65,9 @@ def lm_train():
                 for label, feature in features
             ]
 
+
             # Run optimization op (backprop)
-            summary = model.train(sess, sentences, features, words, lengths)
+            summary = model.train(sess, sentences, features, words, labels, lengths)
             writer.add_summary(summary, step)
 
             # Calculate batch accuracy and loss
