@@ -1,16 +1,18 @@
 import tensorflow as tf
+from tensorflow.contrib.distributions import Categorical
 
 class Decoder:
     """
     The sentences (with the <SOS> marker) represented by a sequence of one-hot
     vectors. Their shape is [batch_size, max_length, embedding_size]
     """
-    def __init__(self, sentences, features, sequence_length,
+    def __init__(self, sentences, features, sequence_length, labels,
                  embedding_size, max_length = 29):
         self.sentences       = sentences
         self.features        = features
         self.sequence_length = sequence_length
         # self.batch_size      = sentences.shape[0]
+        self.labels  		 = labels
         self.num_steps       = max_length
         self.num_hidden      = 512
         self.embedding_size  = embedding_size
@@ -46,7 +48,7 @@ class Decoder:
         # efectively dropping the last word).
         x = self.sentences[:, : self.num_steps, :]
 
-        # The output sentences start at the 2nd word. This efectively means that
+        # The output sentences start at the 2nd word. This effectively means that
         # x and y have the same shape.
         y = self.sentences[:, 1 :, :]
 
@@ -60,7 +62,7 @@ class Decoder:
         c_0, h_0 = self.states[0]
         c_1, h_1 = self.states[1]
 
-        loss = 0.0
+        ce_loss = 0.0
         acc  = 0.0
 
         for t in range(self.num_steps):
@@ -83,13 +85,18 @@ class Decoder:
             ce = tf.nn.softmax_cross_entropy_with_logits(logits = logits,
                                                          labels = targets)
 
-            loss += tf.reduce_sum(ce * mask[:, t])
+            ce_loss += tf.reduce_sum(ce * mask[:, t])
 
             correct_pred = tf.equal(tf.argmax(logits, 1),
                                     tf.argmax(targets, 1))
             correct_pred = tf.cast(correct_pred, tf.float32)
             correct_pred = correct_pred * mask[:, t] + 1 * (1 - mask[:, t])
             acc += tf.reduce_mean(correct_pred)
+
+        discr_loss = self._discriminative_loss()
+
+        alpha = 0.5
+        loss = ce_loss - alpha * discr_loss
 
         self.accuracy = acc  / float(self.num_steps)
         self.loss     = loss / 128.0 / float(self.num_steps)
@@ -125,10 +132,27 @@ class Decoder:
                                                    state  = [ c_1, h_1 ])
 
             logits = tf.nn.xw_plus_b(output, self.out_W, self.out_b)
-            word   = tf.argmax(logits, axis = 1)
+
+
+            # Inputs are multiple sentences right??
+            distr = Categorical(probs=output)
+			word = distr.sample()
+            # word   = tf.argmax(logits, axis = 1)
 
             x = tf.nn.softmax(logits)
 
             sampler.append(word)
 
         self.sampler = tf.transpose(sampler)
+
+
+      def _discriminative_loss(self):
+
+      	# Sorry voor de halve pseudo code Tim.....
+
+      	sentences = _build_sampler()
+      	predictions = sentence_classifier.predict(sentences)
+      	loss = tf.nn.softmax_cross_entropy_with_logits(logits = predictions,
+                                                          labels = self.labels)
+
+      	return loss

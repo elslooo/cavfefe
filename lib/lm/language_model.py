@@ -58,7 +58,7 @@ class LanguageModel(Model):
         ], -1, 1))
 
     def _build_model(self):
-        self.decoder = Decoder(self.x, self.f, self.seqlen, self.embedding_size)
+        self.decoder = Decoder(self.x, self.f, self.seqlen, self.label, self.embedding_size)
         self.cost = self.decoder.loss
 
         optimizer = tf.train.AdamOptimizer(learning_rate = self.learning_rate)
@@ -80,15 +80,16 @@ class LanguageModel(Model):
     """
     This function trains the language model on a batch of sentences.
     """
-    def train(self, session, x, f, y, sequence_lengths):
+    def train(self, session, x, f, y, label, sequence_lengths):
         return session.run([ self.optimizer, self.summary ], feed_dict = {
             self.x: x,
             self.f: f,
             self.y: y,
+            self.label: label,
             self.seqlen: sequence_lengths
         })[1]
 
-    """
+    """  
     This function evaluates the accuracy and loss of the language model on the
     given batch of sentences.
     """
