@@ -14,7 +14,7 @@ def sc_evaluate():
     reader = SentenceReader("data/sc/testing.csv",
                             num_classes, embedding_size = embedding_size)
 
-    batch_size = 256
+    batch_size = 128
     epochs     = len(reader) / batch_size
 
     # Network Parameters

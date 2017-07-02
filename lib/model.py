@@ -17,7 +17,7 @@ class Model:
         variables = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES,
                                       scope = scope)
 
-        saver = tf.train.Saver()
+        saver = tf.train.Saver(variables)
         saver.restore(session, path)
 
     def save(self, session, epoch):

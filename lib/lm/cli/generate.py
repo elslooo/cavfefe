@@ -48,10 +48,13 @@ def lm_generate():
 
     writer = tf.summary.FileWriter("logs", graph = tf.get_default_graph())
 
+    sc_path = "pretrained/sc/SentenceClassifier"
+
     with tf.Session() as sess:
         sess.run(init)
 
         model.restore(sess, "pretrained/lm/LanguageModel")
+        model.sentence_classifier.restore(sess, sc_path)
 
         results = []
 

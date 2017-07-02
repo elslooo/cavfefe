@@ -1,10 +1,12 @@
 import tensorflow as tf
 import numpy as np
 from lib.model import Model
+from lib.sc.lstm import LSTM
 
 class SentenceClassifier(Model):
     def __init__(self, max_length, embedding_size, num_hidden, num_classes,
-                 learning_rate = 0.01):
+                 learning_rate = 0.01, sentences = None,
+                 sequence_lengths = None):
         self.max_length     = max_length
         self.embedding_size = embedding_size
         self.num_hidden     = num_hidden
@@ -14,7 +16,7 @@ class SentenceClassifier(Model):
         with tf.variable_scope("SentenceClassifier"):
             self._create_placeholders()
             self._create_weights()
-            self._build_model()
+            self._build_model(sentences, sequence_lengths)
 
         Model.__init__(self)
 
@@ -36,22 +38,28 @@ class SentenceClassifier(Model):
         self.out_W = tf.Variable(tf.random_normal([
             self.num_hidden,
             self.num_classes
-        ]))
+        ]), name = "out_W")
 
         self.out_b = tf.Variable(tf.random_normal([
             self.num_classes
-        ]))
+        ]), name = "out_b")
 
-    def _build_model(self):
-        lstm = tf.contrib.rnn.BasicLSTMCell(self.num_hidden, forget_bias = 1.0)
+    def _build_model(self, sentences = None, sequence_lengths = None):
+        if sentences is None or sequence_lengths is None:
+            self.lstm = LSTM(self.x, self.seqlen, self.num_hidden,
+                             max_length = self.max_length)
+        else:
+            self.lstm = LSTM(sentences, sequence_lengths, self.num_hidden,
+                             max_length = self.max_length)
 
-        outputs, final_state = tf.nn.dynamic_rnn(lstm, self.x,
-                                                 dtype = tf.float32)
-
-        self.hidden = outputs[:, -1]
+        self.hidden = self.lstm.output
 
         self.pred = tf.matmul(self.hidden, self.out_W) + self.out_b
         self.pred_softmax = tf.nn.softmax(self.pred)
+
+        if sentences is not None and sequence_lengths is not None:
+            self.pred_softmax = tf.stop_gradient(self.pred_softmax)
+            return
 
         ce = tf.nn.softmax_cross_entropy_with_logits(logits = self.pred,
                                                      labels = self.y)

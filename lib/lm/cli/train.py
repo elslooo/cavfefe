@@ -30,7 +30,8 @@ def lm_train():
     model = lm.LanguageModel(max_length     = max_length,
                              embedding_size = embedding_size,
                              feature_size   = feature_size,
-                             num_hidden     = num_hidden)
+                             num_hidden     = num_hidden,
+                             num_classes    = 200)
 
     init = tf.global_variables_initializer()
 
@@ -47,12 +48,18 @@ def lm_train():
 
     writer = tf.summary.FileWriter("logs", graph = tf.get_default_graph())
 
+    sc_path = "pretrained/sc/SentenceClassifier"
+
     with tf.Session() as sess:
         sess.run(init)
 
+        model.sentence_classifier.restore(sess, sc_path)
+
+        print("Restored")
+
         for step, pi in etc.range(epochs):
             # Get a batch of training instances.
-            instances, labels, sentences, words, lengths = \
+            instances, labels, sentences, lengths = \
             reader.read(lines = batch_size)
 
             features = [
@@ -67,24 +74,26 @@ def lm_train():
 
 
             # Run optimization op (backprop)
-            summary = model.train(sess, sentences, features, words, labels, lengths)
+            summary = model.train(sess, sentences, features, labels, lengths)
             writer.add_summary(summary, step)
 
             # Calculate batch accuracy and loss
-            acc, loss = model.evaluate(sess, sentences, features,
-                                       words, lengths)
+            acc, loss, rel, dis = model.evaluate(sess, sentences, features,
+                                                 labels, lengths)
 
             print("Iter " + str(1 + step) + " / " + str(epochs) + \
                   ", Minibatch Loss= " + \
-                  "{:.6f}".format(loss) + ", Training Accuracy= " + \
+                  "{:.6f}".format(loss) + \
+                  " (rel: {:.6f}, dis: {:.6f})".format(rel, dis) + \
+                  ", Training Accuracy= " + \
                   "{:.5f}".format(acc) + ", Time Remaining= " + \
                   etc.format_seconds(pi.time_remaining()), file = sys.stderr)
 
             # Generate a sample sentence after each 10 iterations.
-            if (1 + step) % 1 == 0:
+            if (1 + step) % 10 == 0:
                 sentences = model.generate(sess, features)
 
-                for sentence in sentences:
+                for sentence in sentences[0 : 1]:
                     print(vocabulary.sentence([
                         word for word in sentence
                     ]), file = sys.stderr)
