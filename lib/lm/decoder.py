@@ -66,6 +66,8 @@ class Decoder:
 
         training_sampler = []
 
+        log_probs = tf.zeros(128, tf.float32)
+
         for t in range(self.num_steps):
             # Run the first LSTM.
             with tf.variable_scope('first_lstm', reuse = t > 0):
@@ -94,13 +96,21 @@ class Decoder:
             correct_pred = correct_pred * mask[:, t] + 1 * (1 - mask[:, t])
             acc += tf.reduce_mean(correct_pred)
 
-            word = Categorical(logits = logits).sample()
+            # word = Categorical(logits = logits).sample()
+            x = tf.nn.softmax(logits)
+            word = tf.argmax(x)
+
             training_sampler.append(word)
+
+            # Add probabilities here
+            probs = tf.reduce_max(logits, axis=1)
+            log_probs = tf.add(log_probs, tf.log(probs))
 
         self.accuracy = acc  / float(self.num_steps)
         self.loss     = loss / 128.0 / float(self.num_steps)
 
-        self.training_sampler = tf.stack(training_sampler, axis = 1)
+        # Kan dit?
+        self.training_sampler = log_probs, tf.stack(training_sampler, axis = 1)
 
     def _build_sampler(self):
         # We start with the <SOS> token.
