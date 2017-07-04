@@ -12,7 +12,10 @@ class Vocabulary:
     def word(self, index):
         return self.words[index]
 
-    def sentence(self, indices):
+    def sentence(self, indices, limit = False):
+        if limit == True and 1 in indices:
+            indices = indices[: indices.index(1)]
+            
         return " ".join([ self.word(index) for index in indices ])
 
     def add(self, word):

@@ -10,6 +10,16 @@ import sys
 import os
 import json
 
+mode = "best" # best | worst | random
+
+def experiment(labels):
+    if mode == "best":
+        return labels[-1]
+    elif mode == "worst":
+        return labels[0]
+    else:
+        return np.random.random_integers(1, 200)
+
 def lm_generate():
     max_length = 30
 
@@ -31,7 +41,8 @@ def lm_generate():
     model = lm.LanguageModel(max_length     = max_length,
                              embedding_size = embedding_size,
                              feature_size   = feature_size,
-                             num_hidden     = num_hidden)
+                             num_hidden     = num_hidden,
+                             num_classes    = 200)
 
     init = tf.global_variables_initializer()
 
@@ -48,19 +59,16 @@ def lm_generate():
 
     writer = tf.summary.FileWriter("logs", graph = tf.get_default_graph())
 
-    sc_path = "pretrained/sc/SentenceClassifier"
-
     with tf.Session() as sess:
         sess.run(init)
 
         model.restore(sess, "pretrained/lm/LanguageModel")
-        model.sentence_classifier.restore(sess, sc_path)
 
         results = []
 
         for step, pi in etc.range(epochs):
             # Get a batch of training instances.
-            instances, labels, sentences, words, lengths = \
+            instances, labels, sentences, lengths = \
             reader.read(lines = batch_size)
 
             features = [
@@ -71,7 +79,7 @@ def lm_generate():
             labels = [ label for label, feature in features ]
 
             features = [
-                np.concatenate([ embedding_cache.get(label), feature ])
+                np.concatenate([ embedding_cache.get(experiment(label)), feature ])
                 for label, feature in features
             ]
 
@@ -86,7 +94,7 @@ def lm_generate():
                     "image_id": dataset.example(instances[i]).path + ".jpg",
                     "caption": vocabulary.sentence([
                         word for word in sentence
-                    ])
+                    ], limit = True)
                 })
 
             if step % 10 == 0:
@@ -95,7 +103,7 @@ def lm_generate():
                 except:
                     pass
 
-                with open('products/sentences.json', 'w') as file:
+                with open('products/sentences.best.json', 'w') as file:
                     json.dump(results, file)
 
         print("Optimization Finished!", file = sys.stderr)

@@ -54,7 +54,8 @@ class Decoder:
         # The size of features is [batch_size, feature_size]
         f = self.features[:, :]
 
-        mask = tf.sequence_mask(self.sequence_length, maxlen = self.num_steps,
+        mask = tf.sequence_mask(self.sequence_length - 1,
+                                maxlen = self.num_steps,
                                 dtype = tf.float32)
 
         # We retrieve the initial states of both LSTMs.
@@ -65,8 +66,6 @@ class Decoder:
         acc  = 0.0
 
         training_sampler = []
-
-        log_probs = tf.zeros(128, tf.float32)
 
         for t in range(self.num_steps):
             # Run the first LSTM.
@@ -90,27 +89,18 @@ class Decoder:
 
             loss += tf.reduce_sum(ce * mask[:, t])
 
-            correct_pred = tf.equal(tf.argmax(logits, 1),
-                                    tf.argmax(targets, 1))
+            correct_pred = tf.equal(tf.argmax(logits,  axis = 1),
+                                    tf.argmax(targets, axis = 1))
             correct_pred = tf.cast(correct_pred, tf.float32)
             correct_pred = correct_pred * mask[:, t] + 1 * (1 - mask[:, t])
             acc += tf.reduce_mean(correct_pred)
 
-            # word = Categorical(logits = logits).sample()
-            x = tf.nn.softmax(logits)
-            word = tf.argmax(x)
-
-            training_sampler.append(word)
-
-            # Add probabilities here
-            probs = tf.reduce_max(logits, axis=1)
-            log_probs = tf.add(log_probs, tf.log(probs))
+            training_sampler.append(tf.argmax(logits, axis = 1))
 
         self.accuracy = acc  / float(self.num_steps)
         self.loss     = loss / 128.0 / float(self.num_steps)
 
-        # Kan dit?
-        self.training_sampler = log_probs, tf.stack(training_sampler, axis = 1)
+        self.training_sampler = tf.stack(training_sampler, axis = 1)
 
     def _build_sampler(self):
         # We start with the <SOS> token.
@@ -145,7 +135,7 @@ class Decoder:
             logits = tf.nn.xw_plus_b(output, self.out_W, self.out_b)
 
             x = tf.nn.softmax(logits)
-            word = tf.argmax(x)
+            word = tf.argmax(logits, axis = 1)
 
             sampler.append(word)
 

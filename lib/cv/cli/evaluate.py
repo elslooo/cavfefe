@@ -21,7 +21,7 @@ def cv_evaluate():
 
     for step, pi in etc.range(epochs):
         # Get a batch of training instances.
-        batch_images, batch_labels = reader.read(lines = batch_size)
+        _, batch_images, batch_labels = reader.read(lines = batch_size)
 
         # Calculate batch accuracy and loss
         acc, loss = model.evaluate(sess, batch_images, batch_labels)

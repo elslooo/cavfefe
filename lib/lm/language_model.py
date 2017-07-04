@@ -73,9 +73,7 @@ class LanguageModel(Model):
         self.rel_loss = self.decoder.loss
 
     def _build_discriminative_loss(self):
-        self.dis_loss = tf.constant(0.0)
-
-        samples, log_probs = self.decoder.training_sampler
+        samples = self.decoder.training_sampler
         samples = tf.one_hot(samples, self.embedding_size)
 
         self.sentence_classifier = \
@@ -83,23 +81,12 @@ class LanguageModel(Model):
                            self.num_hidden, self.num_classes,
                            sentences = samples, sequence_lengths = self.seqlen)
 
-        return
-
-
         pred = self.sentence_classifier.pred
 
         y = tf.one_hot(self.y, self.num_classes)
 
-        # Get reward corresponding to ground truth class
-        reward = tf.multiply(self.y, pred)
-
-        reward = tf.reduce_sum(reward, axis=1)
-
-        loss = tf.multiply(reward, log_probs)
-
-      	# loss = tf.nn.softmax_cross_entropy_with_logits(logits = pred,
-        #                                                 labels = y)
-
+      	loss = tf.nn.softmax_cross_entropy_with_logits(logits = pred,
+                                                       labels = y)
         self.dis_loss = tf.reduce_sum(loss) / float(self.num_classes)
 
     """

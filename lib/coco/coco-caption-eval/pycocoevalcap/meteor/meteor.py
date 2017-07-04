@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 # Python wrapper for METEOR implementation, by Xinlei Chen
-# Acknowledge Michael Denkowski for the generous discussion and help 
+# Acknowledge Michael Denkowski for the generous discussion and help
 
 import os
 import sys
@@ -35,7 +35,7 @@ class Meteor:
         eval_line = 'EVAL'
         self.lock.acquire()
         for i in imgIds:
-            assert(len(res[i]) == 1)
+            assert(len(res[i]) >= 1)
             stat = self._stat(res[i][0], gts[i])
             eval_line += ' ||| {}'.format(stat)
 
@@ -65,12 +65,12 @@ class Meteor:
         self.meteor_p.stdin.write('{}\n'.format(score_line))
         stats = self.meteor_p.stdout.readline().strip()
         eval_line = 'EVAL ||| {}'.format(stats)
-        # EVAL ||| stats 
+        # EVAL ||| stats
         self.meteor_p.stdin.write('{}\n'.format(eval_line))
         score = float(self.meteor_p.stdout.readline().strip())
         self.lock.release()
         return score
- 
+
     def __exit__(self):
         self.lock.acquire()
         self.meteor_p.stdin.close()
