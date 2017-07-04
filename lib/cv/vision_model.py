@@ -109,7 +109,7 @@ class VisionModel(Model):
             ]
         })
 
-        return np.argmax(predict_values), features[0], np.max(predict_values)
+        return np.argsort(predict_values), features[0], np.max(predict_values)
 
     def _one_hot(self, index):
         return [ 1.0 if index == i else 0.0 for i in range(self.num_classes) ]

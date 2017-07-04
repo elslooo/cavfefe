@@ -73,8 +73,6 @@ class LanguageModel(Model):
         self.rel_loss = self.decoder.loss
 
     def _build_discriminative_loss(self):
-        self.dis_loss = tf.constant(0.0)
-
         samples = self.decoder.training_sampler
         samples = tf.one_hot(samples, self.embedding_size)
 
@@ -82,9 +80,6 @@ class LanguageModel(Model):
         SentenceClassifier(self.max_length, self.embedding_size,
                            self.num_hidden, self.num_classes,
                            sentences = samples, sequence_lengths = self.seqlen)
-
-        return
-
 
         pred = self.sentence_classifier.pred
 

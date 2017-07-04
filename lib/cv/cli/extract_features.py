@@ -28,7 +28,7 @@ def cv_extract_features():
         # Calculate batch accuracy and loss
         label, features, confidence = model.predict(sess, path)
 
-        cache.set(batch_ids[0], label, features)
+        cache.set(batch_ids[0], label[0], features)
 
         print("Iter " + str(1 + step) + " / " + str(epochs) +
               ", Time Remaining= " + \

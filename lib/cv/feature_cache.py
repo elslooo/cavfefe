@@ -22,7 +22,10 @@ class FeatureCache:
 
             for row in reader:
                 id      = int(row[0])
-                label   = int(row[1])
+                label   = np.array([
+                    int(x)
+                    for x in row[1].split('|')
+                ])
                 feature = np.array([
                     float(x)
                     for x in row[2].split('|')
@@ -43,7 +46,9 @@ class FeatureCache:
             for id in self.labels:
                 writer.writerow([
                     id,
-                    str(self.labels[id]),
+                    '|'.join([
+                        str(x) for x in self.labels[id]
+                    ]),
                     '|'.join([
                         str(x) for x in self.features[id]
                     ])
