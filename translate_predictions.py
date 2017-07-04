@@ -14,6 +14,6 @@ with open('data/CUB_200_2011/CUB_200_2011/images.txt') as file:
 		matching[id] = {image:pred[int(id) - 1][0]}
 
 # Lelijk maar noodzakelijk
-predictions = {entry.keys()[0]:entry.values()[0] for entry in matching.values()}
+predictions = {entry.keys()[0]:entry.values()[0] -1 for entry in matching.values()}
 
 pkl.dump(predictions, open( "data/predictions.p", "wb" ) )
